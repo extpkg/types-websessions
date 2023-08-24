@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "module": "commonjs",
+    "lib": ["ES6"],
+    "types": []
+  },
+  "files": ["index.d.ts"]
+}
