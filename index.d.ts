@@ -2,7 +2,7 @@
 declare namespace ext.websessions {
 
   /** Websession object. */
-  export interface ExtWebsession {
+  export interface Websession {
     /** Websession ID. */
     id: string
     /** Owning extension ID. */
@@ -16,7 +16,7 @@ declare namespace ext.websessions {
   }
 
   /** Websession creation properties. */
-  export interface ExtWebsessionProperties {
+  export interface WebsessionProperties {
     /** Partition key. */
     partition?: string
     /** True if websession is persistent across restarts. */
@@ -28,7 +28,7 @@ declare namespace ext.websessions {
   }
 
   /** Chrome extension. */
-  export interface ExtWebsessionExtension {
+  export interface ChromeExtension {
     /** Chrome extension ID. */
     id: string
     /** Chrome extension manifest. */
@@ -44,7 +44,7 @@ declare namespace ext.websessions {
   }
 
   /** Websession cookie. */
-  export interface ExtWebsessionCookie {
+  export interface Cookie {
     name: string
     value: string
     domain?: string
@@ -58,7 +58,7 @@ declare namespace ext.websessions {
   }
 
   /** Websession query filter. */
-  export interface ExtWebsessionCookieFilter {
+  export interface CookieFilter {
     url?: string
     name?: string
     domain?: string
@@ -69,7 +69,7 @@ declare namespace ext.websessions {
   }
 
   /** Websession cookie options. */
-  export interface ExtWebsessionCookieSet {
+  export interface CookieSet {
     url: string
     name?: string
     value?: string
@@ -82,7 +82,7 @@ declare namespace ext.websessions {
   }
 
   /** Websession proxy options. */
-  export interface ExtWebsessionProxyOptions {
+  export interface ProxyOptions {
     mode?: 'direct' | 'auto_detect' | 'pac_script' | 'fixed_servers' | 'system'
     pacScript?: string
     proxyRules?: string
@@ -90,7 +90,7 @@ declare namespace ext.websessions {
   }
 
   /** Websession network emulation options. */
-  export interface ExtWebsessionNetworkEmulation {
+  export interface NetworkEmulation {
     offline?: boolean
     latency?: number
     downloadThroughput?: number
@@ -98,13 +98,13 @@ declare namespace ext.websessions {
   }
 
   /** Websession preconnect options. */
-  export interface ExtWebsessionPreconnect {
+  export interface Preconnect {
     url: string
     numSockets?: number
   }
 
   /** Websession event. */
-  export interface ExtWebsessionEvent {
+  export interface WebsessionEvent {
     /** Websession ID. */
     id: string
     /** Owning extension ID. */
@@ -112,31 +112,31 @@ declare namespace ext.websessions {
   }
 
   /** Websession download event. */
-  export interface ExtWebsessionEventDownload {
+  export interface EventDownload {
     /** Download tag. */
     tag: string
   }
 
   /** Websession extension event. */
-  export interface ExtWebsessionEventExtension {
+  export interface EventExtension {
     /** Chrome extension ID. */
     id: string
   }
 
   /** Websession cookie event. */
-  export interface ExtWebsessionEventCookie {
+  export interface EventCookie {
     cause: 'explicit' | 'overwrite' | 'expired' | 'evicted' | 'expired-overwrite'
     removed: boolean
   }
 
   /** Websession preconnect event. */
-  export interface ExtWebsessionEventPreconnect {
+  export interface EventPreconnect {
     url: string
     allowCredentials: boolean
   }
 
   /** Event handler. */
-  export interface ExtWebsessionHandler<Listener> {
+  interface EventHandler<Listener> {
     /**
      * Register listener.
      * @param listener Listener to invoke.
@@ -150,9 +150,9 @@ declare namespace ext.websessions {
   }
 
   // Generic
-  export function get(websessionId: string): Promise<ExtWebsession>
-  export function query(filter?: Partial<ExtWebsession>): Promise<ExtWebsession[]>
-  export function create(properties?: ExtWebsessionProperties): Promise<ExtWebsession>
+  export function get(websessionId: string): Promise<Websession>
+  export function query(filter?: Partial<Websession>): Promise<Websession[]>
+  export function create(properties?: WebsessionProperties): Promise<Websession>
   export function remove(websessionIds: string | string[]): Promise<void>
   
   // Downloads
@@ -176,28 +176,28 @@ declare namespace ext.websessions {
   export function downloadGetSavePath(websessionId: string, downloadTag: string): Promise<string>
   
   // Chrome extensions
-  export function loadExtension(websessionId: string, path: string, allowFileAccess?: boolean): Promise<ExtWebsessionExtension>
+  export function loadExtension(websessionId: string, path: string, allowFileAccess?: boolean): Promise<ChromeExtension>
   export function removeExtension(websessionId: string, extensionId: string): Promise<void>
-  export function getExtension(websessionId: string, extensionId: string): Promise<ExtWebsessionExtension>
-  export function getAllExtensions(websessionId: string, path: string, allowFileAccess?: boolean): Promise<ExtWebsessionExtension[]>
+  export function getExtension(websessionId: string, extensionId: string): Promise<ChromeExtension>
+  export function getAllExtensions(websessionId: string, path: string, allowFileAccess?: boolean): Promise<ChromeExtension[]>
   
   // Cookies
-  export function getCookies(websessionId: string, filter?: ExtWebsessionCookieFilter): Promise<ExtWebsessionCookie[]>
-  export function setCookie(websessionId: string, options: ExtWebsessionCookieSet): Promise<void>
+  export function getCookies(websessionId: string, filter?: CookieFilter): Promise<Cookie[]>
+  export function setCookie(websessionId: string, options: CookieSet): Promise<void>
   export function removeCookie(websessionId: string, url: string, name: string): Promise<void>
   export function flushCookies(websessionId: string): Promise<void>
   
   // Network
-  export function enableNetworkEmulation(websessionId: string, options?: ExtWebsessionNetworkEmulation): Promise<void>
+  export function enableNetworkEmulation(websessionId: string, options?: NetworkEmulation): Promise<void>
   export function disableNetworkEmulation(websessionId: string): Promise<void>
   export function closeAllConnections(websessionId: string): Promise<void>
-  export function preconnect(websessionId: string, options: ExtWebsessionPreconnect): Promise<void>
+  export function preconnect(websessionId: string, options: Preconnect): Promise<void>
   
   // Misc
   export function isPersistent(websessionId: string): Promise<boolean>
   export function setUserAgent(websessionId: string, userAgent: string, acceptLanguages?: string): Promise<void>
   export function getUserAgent(websessionId: string): Promise<string>
-  export function setProxy(websessionId: string, options: ExtWebsessionProxyOptions): Promise<void>
+  export function setProxy(websessionId: string, options: ProxyOptions): Promise<void>
   export function reloadProxy(websessionId: string): Promise<void>
   export function getCacheSize(websessionId: string): Promise<number>
   export function clearCache(websessionId: string): Promise<void>
@@ -205,24 +205,24 @@ declare namespace ext.websessions {
   // Events
 
   /** Websession created. */
-  export const onCreated: ExtWebsessionHandler<(event: ExtWebsessionEvent, websession: ExtWebsession) => void>
+  export const onCreated: EventHandler<(event: WebsessionEvent, websession: Websession) => void>
   /** Websession removed. */
-  export const onRemoved: ExtWebsessionHandler<(event: ExtWebsessionEvent, websession: ExtWebsession) => void>
+  export const onRemoved: EventHandler<(event: WebsessionEvent, websession: Websession) => void>
   /** Download started. */
-  export const onDownloadStart: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventDownload) => void>
+  export const onDownloadStart: EventHandler<(event: WebsessionEvent, details: EventDownload) => void>
   /** Download finished. */
-  export const onDownloadDone: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventDownload) => void>
+  export const onDownloadDone: EventHandler<(event: WebsessionEvent, details: EventDownload) => void>
   /** Download state updated. */
-  export const onDownloadUpdated: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventDownload) => void>
+  export const onDownloadUpdated: EventHandler<(event: WebsessionEvent, details: EventDownload) => void>
   /** Chrome extension loaded. */
-  export const onExtensionLoaded: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventExtension) => void>
+  export const onExtensionLoaded: EventHandler<(event: WebsessionEvent, details: EventExtension) => void>
   /** Chrome extension is ready. */
-  export const onExtensionReady: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventExtension) => void>
+  export const onExtensionReady: EventHandler<(event: WebsessionEvent, details: EventExtension) => void>
   /** Chrome extension unloaded. */
-  export const onExtensionUnloaded: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventExtension) => void>
+  export const onExtensionUnloaded: EventHandler<(event: WebsessionEvent, details: EventExtension) => void>
   /** Cookie updated. */
-  export const onCookieUpdated: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventCookie, cookie: ExtWebsessionCookie) => void>
+  export const onCookieUpdated: EventHandler<(event: WebsessionEvent, details: EventCookie, cookie: Cookie) => void>
   /** A connection is about to be established. */
-  export const onPreconnect: ExtWebsessionHandler<(event: ExtWebsessionEvent, details: ExtWebsessionEventPreconnect) => void>
+  export const onPreconnect: EventHandler<(event: WebsessionEvent, details: EventPreconnect) => void>
 
 }
