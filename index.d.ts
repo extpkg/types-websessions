@@ -388,9 +388,9 @@ declare namespace ext.websessions {
    * Get a Chrome extension from websession.
    * @param websessionId The ID of the websession.
    * @param extensionId The ID of the Chrome extension to get.
-   * @returns The promise resolves with the details of the Chrome extension.
+   * @returns The promise resolves with the details of the Chrome extension or null if not found.
    */
-  export function getExtension(websessionId: string, extensionId: string): Promise<ChromeExtension>
+  export function getExtension(websessionId: string, extensionId: string): Promise<ChromeExtension | null>
   
   /**
    * Get all Chrome extensions from websession.
