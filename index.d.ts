@@ -139,6 +139,52 @@ declare namespace ext.websessions {
     numSockets?: number
   }
 
+  /** Web request event type. */
+  export type WebRequestEventType = (
+    'beforeRequest' | 'beforeSendHeaders' | 'beforeReceiveHeaders' |
+    'sendHeaders' | 'responseStarted' | 'redirect' | 'completed' | 'errorOccured'
+  )
+
+  /** Web request resource type. */
+  export type WebRequestResourceType = (
+    'mainFrame' | 'subFrame' | 'stylesheet' | 'script' | 'image' | 'font' |
+    'object' | 'xhr' | 'ping' | 'cspReport' | 'media' | 'webSocket'
+  )
+  
+  /** Web request filter for events. */
+  export interface WebRequestFilter {
+    /** Array of URL patterns that will be used to filter out the requests that do not match the URL patterns. */
+    urls?: string[]
+    /** Array of types that will be used to filter out the requests that do not match the types. */
+    types?: WebRequestResourceType[]
+  }
+
+  /** Response options for the {@link onBeforeWebRequest} event. */
+  export interface WebRequestResponse {
+    /** True to cancel the request. */
+    cancel?: boolean
+    /** The URL to redirect the request to. */
+    redirectURL?: string
+  }
+
+  /** Response options for the {@link onBeforeWebSendHeaders} events. */
+  export interface WebRequestSendHeadersResponse {
+    /** True to cancel the request. */
+    cancel?: boolean
+    /** When provided, request will be made with these headers. */
+    requestHeaders?: Record<string, string | string[]>
+  }
+
+  /** Response options for the {@link onBeforeWebReceiveHeaders} events. */
+  export interface WebRequestReceiveHeadersResponse {
+    /** True to cancel the request. */
+    cancel?: boolean
+    /** When provided, the server is assumed to have responded with these headers. */
+    responseHeaders?: Record<string, string | string[]>
+    /** When provided, the original response header is overriden with this.  */
+    statusLine?: string
+  }
+
   /** Websession event. */
   export interface WebsessionEvent {
     /** Websession ID. */
@@ -173,6 +219,96 @@ declare namespace ext.websessions {
     url: string
     /** Indicates if credentials are allowed for the preconnect. */
     allowCredentials: boolean
+  }
+  
+  /** Base details for all web request events. */
+  export interface EventWebRequest {
+    /** Request ID. */
+    id: number
+    /** A string representing the URL of the request. */
+    url: string
+    /** A string indicating the HTTP request method. */
+    method: string
+    /** A string describing the type of resource */
+    resourceType: WebRequestResourceType | 'other'
+    /** The URL of the referring page, if available. */
+    referrer: string
+    /** A floating-point number representing the time when the request was initiated. */
+    timestamp: number
+  }
+
+  /** Details for the {@link onBeforeWebRequest} event. */
+  export interface EventBeforeWebRequest extends EventWebRequest {}
+
+  /** Details for the {@link onBeforeWebSendHeaders} event. */
+  export interface EventBeforeWebSendHeaders extends EventWebRequest {
+    /** An object containing the headers as key-value pairs. */
+    requestHeaders: Record<string, string>
+  }
+
+  /** Details for the {@link onBeforeWebReceiveHeaders} event. */
+  export interface EventBeforeWebReceiveHeaders extends EventWebRequest {
+    /** A string containing the HTTP status line. */
+    statusLine: string
+    /** An integer representing the HTTP status code. */
+    statusCode: number
+    /** An object containing the headers as key-value pairs. */
+    responseHeaders?: Record<string, string[]>
+  }
+
+  /** Details for the {@link onWebSendHeaders} event. */
+  export interface EventWebSendHeaders extends EventWebRequest {
+    /** An object containing the headers as key-value pairs. */
+    requestHeaders: Record<string, string>
+  }
+
+  /** Details for the {@link onWebResponseStarted} event. */
+  export interface EventWebResponseStarted extends EventWebRequest {
+    /** An object containing the headers as key-value pairs. */
+    responseHeaders?: Record<string, string[]>
+    /** A boolean value indicating whether the request is served from the cache. */
+    fromCache: boolean
+    /** An integer representing the HTTP status code. */
+    statusCode: number
+    /** A string containing the HTTP status line. */
+    statusLine: string
+  }
+
+  /** Details for the {@link onWebRedirect} event. */
+  export interface EventWebRedirect extends EventWebRequest {
+    redirectURL: string
+    /** An integer representing the HTTP status code. */
+    statusCode: number
+    /** A string containing the HTTP status line. */
+    statusLine: string
+    /** A string containing the IP address of the server the request is being made to. */
+    ip?: string
+    /** A boolean value indicating whether the request is served from the cache. */
+    fromCache: boolean
+    /** An object containing the headers as key-value pairs. */
+    responseHeaders?: Record<string, string[]>
+  }
+
+  /** Details for the {@link onWebCompleted} event. */
+  export interface EventWebCompleted extends EventWebRequest {
+    /** An object containing the headers as key-value pairs. */
+    responseHeaders?: Record<string, string[]>
+    /** A boolean value indicating whether the request is served from the cache. */
+    fromCache: boolean
+    /** An integer representing the HTTP status code. */
+    statusCode: number
+    /** A string containing the HTTP status line. */
+    statusLine: string
+    /** Provides information about any network errors that may have occurred during the request. */
+    error: string
+  }
+
+  /** Details for the {@link onWebErrorOccured} event. */
+  export interface EventWebErrorOccured extends EventWebRequest {
+    /** A boolean value indicating whether the request is served from the cache. */
+    fromCache: boolean
+    /** Provides information about any network errors that may have occurred during the request. */
+    error: string
   }
 
   /** Event handler. */
@@ -466,6 +602,47 @@ declare namespace ext.websessions {
    * @returns The promise resolves when the preconnect has been initiated.
    */
   export function preconnect(websessionId: string, options: Preconnect): Promise<void>
+
+  // Web requests
+
+  /**
+   * Enable the web request filter to start receiving web request events.
+   * @param websessionId The ID of the websession.
+   * @param event Event to enable web request filter for.
+   * @param options Filter options.
+   */
+  export function setWebRequestFilter(websessionId: string, event: WebRequestEventType, options?: WebRequestFilter): Promise<void>
+
+  /**
+   * Remove the web request filter to stop receiving web request events.
+   * @param websessionId The ID of the websession.
+   * @param event Event to disable web request filter for.
+   */
+  export function removeWebRequestFilter(websessionId: string, event: WebRequestEventType): Promise<void>
+
+  /**
+   * Respond to a {@link onBeforeWebRequest} event. Must be called for each event.
+   * @param websessionId The ID of the websession.
+   * @param requestId The ID of the request.
+   * @param options Response options.
+   */
+  export function webRequestResponse(websessionId: string, requestId: number, options: WebRequestResponse): Promise<void>
+  
+  /**
+   * Respond to a {@link onBeforeWebSendHeaders} event. Must be called for each event.
+   * @param websessionId The ID of the websession.
+   * @param requestId The ID of the request.
+   * @param options Response options.
+   */
+  export function webSendHeadersResponse(websessionId: string, requestId: number, options: WebRequestSendHeadersResponse): Promise<void>
+  
+  /**
+   * Respond to a {@link onBeforeWebReceiveHeaders} event. Must be called for each event.
+   * @param websessionId The ID of the websession.
+   * @param requestId The ID of the request.
+   * @param options Response options.
+   */
+  export function webReceiveHeadersResponse(websessionId: string, requestId: number, options: WebRequestReceiveHeadersResponse): Promise<void>
   
   // Misc
   
@@ -543,5 +720,21 @@ declare namespace ext.websessions {
   export const onCookieUpdated: EventHandler<(event: WebsessionEvent, details: EventCookie, cookie: Cookie) => void>
   /** A connection is about to be established. */
   export const onPreconnect: EventHandler<(event: WebsessionEvent, details: EventPreconnect) => void>
-
+  /** A web request is about to occur. Must be responded to with {@link webRequestResponse}. */
+  export const onBeforeWebRequest: EventHandler<(event: WebsessionEvent, details: EventBeforeWebRequest) => void>
+  /** Headers of a web request are about to be sent. Must be responded to with {@link webSendHeadersResponse}. */
+  export const onBeforeWebSendHeaders: EventHandler<(event: WebsessionEvent, details: EventBeforeWebSendHeaders) => void>
+  /** Headers of a web request are about to be received. Must be responded to with {@link webReceiveHeadersResponse}. */
+  export const onBeforeWebReceiveHeaders: EventHandler<(event: WebsessionEvent, details: EventBeforeWebReceiveHeaders) => void>
+  /** Headers of a web request were sent. */
+  export const onWebSendHeaders: EventHandler<(event: WebsessionEvent, details: EventWebSendHeaders) => void>
+  /** Web request response started. */
+  export const onWebResponseStarted: EventHandler<(event: WebsessionEvent, details: EventWebResponseStarted) => void>
+  /** Web request redirect occured. */
+  export const onWebRedirect: EventHandler<(event: WebsessionEvent, details: EventWebRedirect) => void>
+  /** Web request has completed. */
+  export const onWebCompleted: EventHandler<(event: WebsessionEvent, details: EventWebCompleted) => void>
+  /** Web request error occurred. */
+  export const onWebErrorOccured: EventHandler<(event: WebsessionEvent, details: EventWebErrorOccured) => void>
+  
 }
