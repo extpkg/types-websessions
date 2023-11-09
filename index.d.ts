@@ -257,6 +257,14 @@ declare namespace ext.websessions {
     result: boolean
   }
 
+  /** Permission type for check filter. */
+  export type PermissionCheckType = (
+    'clipboard-read' | 'clipboard-sanitized-write' | 'geolocation' |
+    'fullscreen' | 'hid' | 'idle-detection' | 'media' |
+    'mediaKeySystem' | 'midi' | 'midiSysex' | 'notifications' |
+    'openExternal' | 'pointerLock' | 'serial' | 'usb'
+  )
+
   /** Websession event. */
   export interface WebsessionEvent {
     /** Websession ID. */
@@ -780,6 +788,22 @@ declare namespace ext.websessions {
    * @param options Response options.
    */
   export function permissionRequestResponse(websessionId: string, requestId: number, options: PermissionResponse): Promise<void>
+
+  /**
+   * Set permission check response.
+   * @param websessionId The ID of the websession.
+   * @param permission Permission to set the response for.
+   * @param result True to allow, false to reject.
+   */
+  export function setPermissionCheckResponse(websessionId: string, permission: PermissionCheckType, result: boolean): Promise<void>
+  
+  /**
+   * Get permission check response.
+   * @param websessionId The ID of the websession.
+   * @param permission Permission to check the response for.
+   * @returns True if allowed, false if rejected.
+   */
+  export function getPermissionCheckResponse(websessionId: string, permission: PermissionCheckType): Promise<boolean>
 
   // Misc
   
