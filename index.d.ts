@@ -119,6 +119,20 @@ declare namespace ext.websessions {
     proxyBypassRules?: string
   }
 
+  /** Websession clear storage options. */
+  export interface ClearStorageOptions {
+    /** Origin (scheme://host:port) of the data to clear. */
+    origin?: string
+    /** The types of storages to clear. */
+    storages?: (
+      "cookies" | "filesystem" | "indexdb" |
+      "localstorage" | "shadercache" | "websql" |
+      "serviceworkers" | "cachestorage"
+    )[]
+    /** The types of quotas to clear. */
+    quotas?: ("temporary" | "syncable")[]
+  }
+
   /** Websession network emulation options. */
   export interface NetworkEmulation {
     /** Set the session to offline mode. */
@@ -183,6 +197,64 @@ declare namespace ext.websessions {
     responseHeaders?: Record<string, string | string[]>
     /** When provided, the original response header is overriden with this.  */
     statusLine?: string
+  }
+
+  /** Certificate principal object. */
+  export interface CertificatePrincipal {
+    /** Common Name. */
+    commonName: string
+    /** Organization names. */
+    organizations: string[]
+    /** Organization Unit names. */
+    organizationUnits: string[]
+    /** Locality. */
+    locality: string
+    /** State or province. */
+    state: string
+    /** Country or region. */
+    country: string
+  }
+
+  /** Certificate object. */
+  export interface Certificate {
+    /** PEM encoded data. */
+    data: string
+    /** Issuer principal. */
+    issuer: CertificatePrincipal
+    /** Issuer's Common Name. */
+    issuerName: string
+    /** Issuer certificate (if not self-signed). */
+    issuerCert: Certificate
+    /** Subject principal. */
+    subject: CertificatePrincipal
+    /** Subject's Common Name. */
+    subjectName: string
+    /** Hex value represented string. */
+    serialNumber: string
+    /** Start date of the certificate being valid in seconds. */
+    validStart: number
+    /** End date of the certificate being valid in seconds. */
+    validExpiry: number
+    /** Fingerprint of the certificate. */
+    fingerprint: string
+  }
+  
+  /** Response options for the {@link onVerifyCertificate} events. */
+  export interface VerifyCertificateResponse {
+    /** Certificate error code. */
+    result: number
+  }
+
+  /** Webview ID. */
+  export interface WebviewId {
+    /** Webview ID. */
+    id: string
+  }
+
+  /** Response options for the {@link onPermissionRequest} events. */
+  export interface PermissionResponse {
+    /** Permission response. */
+    result: boolean
   }
 
   /** Websession event. */
@@ -311,6 +383,39 @@ declare namespace ext.websessions {
     error: string
   }
 
+  /** Details for the {@link onVerifyCertificate} event. */
+  export interface EventVerifyCertificate {
+    /** Request ID. */
+    id: number
+    /** Certificate hostname. */
+    hostname: string
+    /** The certificate being presented by the remote server. */
+    certificate: Certificate
+    /** The validated certificate. */
+    validatedCertificate: Certificate
+    /** True if Chromium recognises the root CA as a standard root. */
+    isIssuedByKnownRoot: boolean
+    /** OK if the certificate is trusted, otherwise an error like CERT_REVOKED. */
+    verificationResult: string
+    /** Error code. */
+    errorCode: number
+  }
+
+  /** Details for the {@link onPermissionRequest} event. */
+  export interface EventPermissionRequest {
+    /** Request ID. */
+    id: number
+    /** Webview requesting the permission. */
+    webview?: WebviewId
+    /** Type of permission. */
+    permission: (
+      'clipboard-read' | 'clipboard-sanitized-write' | 'display-capture' |
+      'fullscreen' | 'geolocation' | 'idle-detection' | 'media' |
+      'mediaKeySystem' | 'midi' | 'midiSysex' | 'notifications' |
+      'pointerLock' | 'openExternal' | 'window-management' | 'unknown'
+    )
+  }
+  
   /** Event handler. */
   interface EventHandler<Listener> {
     /**
@@ -644,6 +749,38 @@ declare namespace ext.websessions {
    */
   export function webReceiveHeadersResponse(websessionId: string, requestId: number, options: WebRequestReceiveHeadersResponse): Promise<void>
   
+  // Callbacks
+
+  /**
+   * Set certificate verification event filter.
+   * @param websessionId The ID of the websession.
+   * @param enable True to enable events.
+   */
+  export function verifyCertificateFilter(websessionId: string, enable: boolean): Promise<void>
+  
+  /**
+   * Respond to a certificiate verification event.
+   * @param websessionId The ID of the websession.
+   * @param requestId The ID of the request.
+   * @param options Response options.
+   */
+  export function verifyCertificateResponse(websessionId: string, requestId: number, options: VerifyCertificateResponse): Promise<void>
+
+  /**
+   * Set permission request event filter.
+   * @param websessionId The ID of the websession.
+   * @param enable True to enable events.
+   */
+  export function permissionRequestFilter(websessionId: string, enable: boolean): Promise<void>
+  
+  /**
+   * Respond to a permission request event.
+   * @param websessionId The ID of the websession.
+   * @param requestId The ID of the request.
+   * @param options Response options.
+   */
+  export function permissionRequestResponse(websessionId: string, requestId: number, options: PermissionResponse): Promise<void>
+
   // Misc
   
   /**
@@ -698,6 +835,19 @@ declare namespace ext.websessions {
    */
   export function clearCache(websessionId: string): Promise<void>
 
+  /**
+   * Clear storage data in websession.
+   * @param websessionId The ID of the websession.
+   * @param options Options for clearing storage data.
+   */
+  export function clearStorageData(websessionId: string, options?: ClearStorageOptions): Promise<void>
+
+  /**
+   * Writes any unwritten data to disk.
+   * @param websessionId The ID of the websession.
+   */
+  export function flushStorageData(websessionId: string): Promise<void>
+
   // Events
   
   /** Websession created. */
@@ -736,5 +886,9 @@ declare namespace ext.websessions {
   export const onWebCompleted: EventHandler<(event: WebsessionEvent, details: EventWebCompleted) => void>
   /** Web request error occurred. */
   export const onWebErrorOccured: EventHandler<(event: WebsessionEvent, details: EventWebErrorOccured) => void>
+  /** Certificate verification event. Must be responded to with {@link verifyCertificateResponse}. */
+  export const onVerifyCertificate: EventHandler<(event: WebsessionEvent, details: EventVerifyCertificate) => void>
+  /** Permission request event. Must be responded to with {@link permissionRequestResponse}.*/
+  export const onPermissionRequest: EventHandler<(event: WebsessionEvent, details: EventPermissionRequest) => void>
   
 }
