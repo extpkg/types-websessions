@@ -1,6 +1,6 @@
 {
   "name": "@extpkg/types-websessions",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Types for EXT websessions module",
   "author": "EXT, Inc.",
   "license": "MIT",
